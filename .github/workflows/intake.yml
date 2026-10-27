@@ -1,0 +1,56 @@
+# Listing intake: request (issue) -> automatic checks -> pull request for the owner.
+# Requires Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
+# The owner approves a listing by merging the pull request (one tap in the
+# GitHub mobile app); the host then rebuilds and publishes the site.
+#
+# Security: the issue text is untrusted. It is passed to the script through an
+# environment variable and a file, never interpolated into a shell command
+# (avoids GitHub Actions script injection).
+name: listing-intake
+on:
+  issues:
+    types: [opened, edited]
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+concurrency:
+  group: intake-${{ github.event.issue.number }}
+  cancel-in-progress: true
+jobs:
+  intake:
+    if: startsWith(github.event.issue.title, '掲載申請')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the request
+        id: check
+        env:
+          BODY: ${{ github.event.issue.body }}
+          ISSUE: ${{ github.event.issue.number }}
+          TZ: Asia/Tokyo
+        run: |
+          printf '%s' "$BODY" > "$RUNNER_TEMP/body.md"
+          set +e
+          python3 automation/intake.py --issue "$ISSUE" --body-file "$RUNNER_TEMP/body.md" --write > "$RUNNER_TEMP/result.txt"
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+      - name: Comment the result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: gh issue comment "$ISSUE" --body-file "$RUNNER_TEMP/result.txt"
+      - name: Open a pull request for the owner
+        if: steps.check.outputs.status == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          branch="listing/issue-$ISSUE"
+          git config user.name "shipyard-intake"
+          git config user.email "intake@users.noreply.github.com"
+          git switch -c "$branch"
+          git add "site/apps/issue-$ISSUE.json"
+          git commit -m "Listing request #$ISSUE"
+          git push --force -u origin "$branch"
+          gh pr create --title "掲載: #$ISSUE" --body "Closes #$ISSUE. 自動チェック済み。内容を確認してマージすると公開されます。" --head "$branch" || true

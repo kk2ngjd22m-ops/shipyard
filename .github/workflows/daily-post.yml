@@ -1,0 +1,24 @@
+# Posts today's debuts to X every morning. Does nothing until the owner sets
+# the SITE_URL variable and the four X_* secrets in the repository settings.
+name: daily-x-post
+on:
+  schedule:
+    - cron: "5 23 * * *"   # 08:05 JST every day
+  workflow_dispatch: {}
+permissions:
+  contents: read           # read-only: the job can't change the repository
+jobs:
+  post:
+    if: vars.SITE_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Post today's debuts
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          TZ: Asia/Tokyo
+        run: python3 automation/x_daily_post.py --post --site-url "${{ vars.SITE_URL }}"

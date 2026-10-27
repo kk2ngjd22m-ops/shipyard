@@ -1,0 +1,70 @@
+# Listing request form (GitHub issue form). Copy to .github/ISSUE_TEMPLATE/
+# in Shipyard's own public repository at launch. Everything entered here is
+# public on GitHub, so it asks for nothing private.
+name: 作品を掲載する
+description: AIでつくったアプリやWebサービスを、Shipyard に無料で掲載します
+title: "掲載申請: "
+labels: ["listing"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        入力した内容はすべて公開されます。メールアドレスなどの個人情報は書かないでください。
+        送信すると自動チェックが走り、結果がこのページにコメントされます。
+  - type: input
+    id: name
+    attributes: {label: 作品名, description: 30文字まで}
+    validations: {required: true}
+  - type: input
+    id: tagline
+    attributes: {label: 一言説明, description: 40文字まで（例: 冷蔵庫の写真から、今夜の献立を3つ提案）}
+    validations: {required: true}
+  - type: textarea
+    id: description
+    attributes: {label: 説明, description: 600文字まで。どんな人の、どんな困りごとを解決するか}
+    validations: {required: true}
+  - type: dropdown
+    id: platform
+    attributes: {label: 使える場所, options: [iPhone, Android, Web]}
+    validations: {required: true}
+  - type: input
+    id: url
+    attributes:
+      label: リンク
+      description: iPhone は App Store、Android は Google Play のページ。Web は https の公式サイト。短縮URLやファイルの直接ダウンロードは使えません
+    validations: {required: true}
+  - type: dropdown
+    id: category
+    attributes: {label: 分類, options: [仕事・効率化, 暮らし, 学び, 健康・運動, 創作, 開発者向け, 遊び]}
+    validations: {required: true}
+  - type: checkboxes
+    id: ai_tools
+    attributes:
+      label: つくるのに使ったAI（1つ以上）
+      options:
+        - label: Claude Code
+        - label: Cursor
+        - label: Codex
+        - label: GitHub Copilot
+        - label: Gemini
+        - label: Windsurf
+        - label: v0
+        - label: Bolt
+        - label: Lovable
+        - label: Replit
+        - label: その他
+  - type: input
+    id: maker_name
+    attributes: {label: 作り手の表示名, description: 30文字まで。本名でなくてかまいません}
+    validations: {required: true}
+  - type: checkboxes
+    id: agree
+    attributes:
+      label: 確認
+      options:
+        - label: 自分（または自分のチーム）がつくった作品です
+          required: true
+        - label: 掲載できないもの（他人の作品、ファイルの直接配布、「稼げる」系、成人向け、ギャンブル、法律に反するもの）に当たりません
+          required: true
+        - label: 入力した内容が公開されることに同意します
+          required: true
